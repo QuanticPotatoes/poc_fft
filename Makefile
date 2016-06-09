@@ -1,5 +1,5 @@
 poc_fft:
-	g++ *.cpp -lfftw3 -lsndfile -lm -lpng
+	g++ *.cpp -lfftw3 -lsndfile -lm -lpng -Wno-write-strings
 
 clean:
 	rm -rfv poc_fft
