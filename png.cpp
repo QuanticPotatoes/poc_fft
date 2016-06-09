@@ -4,7 +4,7 @@
 #include "png.hpp"
 #include <png.h>
 
-int writePng( PIXEL * matrix, int width, int height) { 
+int writePng( PIXEL * matrix, int width, int height, char* namefile) { 
         png_structp     png_ptr;
         png_infop       info_ptr;
         png_bytep * row_pointers;
@@ -12,7 +12,7 @@ int writePng( PIXEL * matrix, int width, int height) {
 
 
         /* create file */
-        FILE *fp = fopen("spectrum.png", "wb");
+        FILE *fp = fopen(namefile, "wb");
         if (!fp)
                 //abort_("[write_png_file] File %s could not be opened for writing", "decoded.png");
 		return -1;
@@ -68,7 +68,7 @@ int writePng( PIXEL * matrix, int width, int height) {
 			//std::cout << x << " " << y <<"\n";
                         png_byte* ptr = &(row[x*4]);
 
-                        ptr[0] = matrix[x + 10 + width * y].Red;
+                        ptr[0] = matrix[x + width * y].Red;
                         ptr[1] = matrix[x + width * y].Green;
                         ptr[2] = matrix[x + width * y].Blue;
                         ptr[3] = 255;

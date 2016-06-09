@@ -18,13 +18,18 @@ int main(int argc, char ** argv) {
   int half = N/2;
   double *processed;
   PIXEL * img;
+  PIXEL * img_mfcc;
   int x = 0;
   int mfcc_mel = 60;
+  int frmin = 300, frmax = 8000;
   unsigned int color;
   double * averageBuffer;
   double *mfccs;
   double *result_mfcc;
 
+  /*if(((frmax - frmin) / mfcc_mel)*60 < frmax){
+    mfcc_mel -= 1;
+  }*/
 
   if (! (infile = sf_open(argv[1], SFM_READ, &sfinfo))) {   /* Open failed so print an error message. */
     std::cout << "Impossible d'ouvrir le fichier d'entré...\n" ;
@@ -42,7 +47,8 @@ int main(int argc, char ** argv) {
 
 
   img = new PIXEL[half * (sfinfo.frames/half)];
- 
+  img_mfcc = new PIXEL[mfcc_mel * 256];
+
   in = (double*) fftw_malloc(sizeof(double) * N);
   out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
   processed = (double*) fftw_malloc(sizeof(double) * N);
@@ -62,10 +68,8 @@ int main(int argc, char ** argv) {
      out[i][0] *= N; // Real Values
      out[i][1] *= N; // Complex Values
 
-
-
      mfccs[x + i * (sfinfo.frames/N)] = pow(abs(out[i][1]),2); //absolute value of the complex fourier transform
-     mfccs[x + i * (sfinfo.frames/N)] *= 1125 * log( (x*((44100)/N)/700 ) ) + 22; // multiply each complex value with each filterbank
+     mfccs[x + i * (sfinfo.frames/N)] *= 1125 * log( (x*((sfinfo.samplerate)/N)/700 ) ) + 22; // multiply each complex value with each filterbank
 
 
      processed[i] = (sqrtf(out[i][0]*out[i][0] + out[i][1]*out[i][1])); // Power Spectrum
@@ -94,15 +98,25 @@ int main(int argc, char ** argv) {
 
 
   int v = 0;
+  int w = 0;
 
   for(int j = 0; j < 256; j++){
-    for(int i = 300; i < 8000; i+= ((8000 - 300)/ mfcc_mel) )
+    for(int i = frmin; i < frmax; i+= ((frmax - frmin)/ mfcc_mel) )
     {
 
-      result_mfcc[j + v * mfcc_mel] = mfccs[j + ((int)floor( (N+1) * i / sfinfo.samplerate )) * (sfinfo.frames/N)];
+      result_mfcc[v + j * mfcc_mel] = mfccs[((int)floor( (N+1) * i / sfinfo.samplerate )) + j * (sfinfo.frames/N)];
+      color = result_mfcc[v + j * mfcc_mel] * 255;
 
+      img_mfcc[v + j * mfcc_mel].Red = (color & 255);
+      img_mfcc[v + j * mfcc_mel].Green = ((color & (255 << 8)) >> 8);
+      img_mfcc[v + j * mfcc_mel].Blue = ((color & (255 << 16)) >> 16);
+      img_mfcc[v + j * mfcc_mel].Alpha = 255;
+
+      //std::cout << "color :" << mfccs[v + j * (sfinfo.frames/N)] << "\n";
+      v++;
+      
     }
-    v++;
+    v = 0;
   }
 
   //mfccs[x + i * (sfinfo.frames/N)] *= 1125 * log( (x*((44100)/N)/700 ) ) + 22; // multiply each complex value with each filterbank
@@ -111,7 +125,8 @@ int main(int argc, char ** argv) {
   ;
 
 
-  writePng(img, (sfinfo.frames/N), half);
+  writePng(img, (sfinfo.frames/N), half,"spectrum.png");
+  writePng(img_mfcc,mfcc_mel,256,"mfcc.png");
  
   // ...
 
