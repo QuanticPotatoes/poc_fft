@@ -1,8 +1,8 @@
 #include <iostream>
-#include <fftw3.h>
 #include <sndfile.h>
 #include <cmath>
 #include <stdlib.h>
+#include <fftw3.h>
 #include "png.hpp"
 
 int main(int argc, char ** argv) {
@@ -58,7 +58,7 @@ int main(int argc, char ** argv) {
   p = fftw_plan_dft_r2c_1d(N, in, out, FFTW_ESTIMATE | FFTW_PRESERVE_INPUT);
   
   while((readcount = sf_read_double(infile,in,N))){
-  
+
   	fftw_execute(p); /* repeat as needed */
   	
    // std::cout << "Frequence :" << x*((44100)/N) << "\n";
